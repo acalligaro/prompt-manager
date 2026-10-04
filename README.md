@@ -2,23 +2,39 @@
 
 *Bibliothèque de prompts pour les sites d'IA.* · [English version](README.en.md)
 
-Extension Chrome / Edge (Manifest V3) : bibliothèque locale de prompts, avec tags et recherche, utilisable sur les sites d'IA (Claude, ChatGPT, DeepSeek, Perplexity…). Enregistrer le prompt écrit dans la zone de saisie de la page, le retrouver, le recharger en un clic.⁣‌‌‌‌‌‌‌​​​‌​​​‌​​‍‌⁣
+Extension Chrome / Edge (Manifest V3) : bibliothèque locale de prompts, avec tags et recherche, utilisable sur les sites d'IA (Claude, ChatGPT, Gemini, DeepSeek, Mistral, Perplexity, Grok…). Enregistrer le prompt écrit dans la zone de saisie de la page, le retrouver, le recharger en un clic.⁣‌‌‌‌‌‌‌​​​‌​​​‌​​‍‌⁣
 
 ![Menu de l'extension](docs/img/01-popup.png)
 
 ## Sites pris en charge
 
-L'extension agit sur l'onglet actif, quel que soit le site : elle cherche la zone de saisie de la page (celle qui a le focus, sinon la zone de texte visible la plus basse).
+L'extension agit sur l'onglet actif, quel que soit le site : elle cherche la zone de saisie de la page (celle qui a le focus, sinon la zone de texte visible la plus basse). Le prompt est inséré sans collage, donc **sans pièce jointe** : ChatGPT, par exemple, transforme un long texte collé en fichier joint, que beaucoup d'entreprises bloquent.
 
-| Site | Éditeur | Vérifié |
-|---|---|---|
-| Claude (`claude.ai`) | ProseMirror | Lecture et écriture, sauts de ligne compris |
-| ChatGPT (`chatgpt.com`) | ProseMirror | Lecture et écriture, sauts de ligne compris |
-| DeepSeek (`chat.deepseek.com`) | `textarea` | Lecture et écriture, sauts de ligne compris |
-| Perplexity (`perplexity.ai`) | Lexical | Lecture et écriture, sauts de ligne compris |
-| Autres sites (Gemini, Mistral, Kilo, Copilot…) | `textarea` ou `contenteditable` | Même mécanisme, non vérifié site par site |
+Fournisseurs web de la [liste OmniRoute](https://github.com/diegosouzapw/OmniRoute/blob/main/docs/reference/PROVIDER_REFERENCE.md) (et sites courants) **validés et testés** le 2026-10-04 : écriture d'un prompt de plusieurs lignes avec accents, relecture identique, puis effacement, sans envoi.
 
-Si aucune zone de saisie n'est trouvée, « Charger » copie le prompt dans le presse-papiers.
+| Fournisseur | Site | Éditeur | Résultat |
+|---|---|---|---|
+| Claude | `claude.ai` | ProseMirror | ✅ validé |
+| ChatGPT | `chatgpt.com` | ProseMirror | ✅ validé (prompt de 7 276 caractères, aucune pièce jointe) |
+| DeepSeek | `chat.deepseek.com` | `textarea` | ✅ validé |
+| Perplexity | `perplexity.ai` | Lexical | ✅ validé |
+| Gemini | `gemini.google.com` | Quill | ✅ validé |
+| Grok | `grok.com` | `textarea` | ✅ validé |
+| HuggingChat | `huggingface.co/chat` | `textarea` | ✅ validé |
+| Kimi | `kimi.com` | Lexical | ✅ validé |
+| Mistral Le Chat | `chat.mistral.ai` | ProseMirror | ✅ validé |
+| DuckDuckGo AI Chat | `duck.ai` | `textarea` | ✅ validé |
+| Qwen Chat | `chat.qwen.ai` | `textarea` | ✅ validé |
+| Z.ai | `chat.z.ai` | `textarea` | ✅ validé |
+| Venice | `venice.ai` | `textarea` | ✅ validé |
+| Microsoft Copilot | `copilot.microsoft.com` | — | ⚪ non testé (page non scriptable par l'outil de test) |
+| Meta AI | `meta.ai` | — | ⚪ non testé (page non chargée) |
+| Arena (LMArena) | `lmarena.ai` | — | ⚪ non testé (vérification anti-robot) |
+| Poe | `poe.com` | — | ⚪ non testé (connexion requise) |
+
+Les autres sites web (t3.chat, Blackbox, Notion AI, v0, Yuanbao, M365 Copilot…) utilisent les mêmes types d'éditeur et devraient fonctionner, sans validation à ce jour. Les fournisseurs OmniRoute de type API, CLI ou IDE (clés d'API, Codex CLI, Cursor, Kiro…) n'ont pas de page web de chat : ils sont hors du périmètre d'une extension de navigateur.
+
+Si aucune zone de saisie n'est trouvée, ou si l'éditeur refuse le texte, « Charger » copie le prompt dans le presse-papiers.
 
 ## Installation
 
@@ -89,13 +105,13 @@ Même principes que MDE Kusto Saver : pas d'étape de build, JavaScript vanilla,
 
 - **`activeTab` au lieu d'une liste de sites.** L'extension n'a accès qu'à l'onglet actif, et seulement quand on ouvre son menu : elle fonctionne sur n'importe quel site d'IA sans demander l'accès à tous les sites.
 - **Aucun content script permanent.** Le menu injecte à la demande (`chrome.scripting.executeScript`, monde `MAIN`, frame principale) la fonction `composer`, qui lit ou remplace le texte de la zone de saisie.
-- **Écriture compatible avec les éditeurs riches.** `textarea` : sélection puis `insertText` (repli : setter natif + événement `input`). ProseMirror / Lexical : sélection par `Range`, puis collage simulé (`paste` avec `text/plain`), qui conserve les sauts de ligne ; repli : `insertText`. Le texte relu est comparé au prompt pour confirmer.
+- **Écriture sans collage, compatible avec les éditeurs riches.** `textarea` : sélection puis `insertText` (repli : setter natif + événement `input`). Éditeurs riches : sélection par `Range`, puis `insertText` (ProseMirror, Quill) ; si les sauts de ligne sont perdus, saisie ligne par ligne par événements `beforeinput` (`insertText` + `insertLineBreak`, pour Lexical) ou `insertParagraph`. Jamais de collage simulé : aucun site ne transforme le prompt en pièce jointe. Le texte relu est comparé au prompt pour confirmer.
 - **Aucun appel réseau, rien n'est envoyé au site** : le prompt est seulement placé dans la zone de saisie, l'envoi reste manuel.
 
 ## Limites
 
 - Une zone de saisie dans une iframe n'est pas atteinte (aucun des sites vérifiés n'en utilise).
-- Les éditeurs qui refusent le collage simulé et `insertText` ne peuvent pas être remplis : le bouton copie alors le prompt dans le presse-papiers.
+- Les éditeurs qui refusent `insertText` et les événements `beforeinput` ne peuvent pas être remplis : le bouton copie alors le prompt dans le presse-papiers.
 - Interface en français uniquement.
 
 ## Licence

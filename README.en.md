@@ -2,7 +2,7 @@
 
 *A prompt library for AI websites.* · [Version française](README.md)
 
-Chrome / Edge extension (Manifest V3): a local prompt library, with tags and search, for AI websites (Claude, ChatGPT, DeepSeek, Perplexity…). Save the prompt typed in the page's input box, find it again, load it back in one click.⁣‌‌‌‌‌‌‌​​​‌​​​‌​​‍‌⁣
+Chrome / Edge extension (Manifest V3): a local prompt library, with tags and search, for AI websites (Claude, ChatGPT, Gemini, DeepSeek, Mistral, Perplexity, Grok…). Save the prompt typed in the page's input box, find it again, load it back in one click.⁣‌‌‌‌‌‌‌​​​‌​​​‌​​‍‌⁣
 
 The extension interface is in French only: the screenshots below are the same as in the French README, and button labels are quoted as they appear, with their meaning in English.
 
@@ -10,17 +10,33 @@ The extension interface is in French only: the screenshots below are the same as
 
 ## Supported sites
 
-The extension works on the active tab, whatever the site: it looks for the page's input box (the focused one, else the lowest visible text box).
+The extension works on the active tab, whatever the site: it looks for the page's input box (the focused one, else the lowest visible text box). The prompt is inserted without pasting, so **without any attachment**: ChatGPT, for instance, turns long pasted text into an attached file, which many companies block.
 
-| Site | Editor | Checked |
-|---|---|---|
-| Claude (`claude.ai`) | ProseMirror | Read and write, line breaks included |
-| ChatGPT (`chatgpt.com`) | ProseMirror | Read and write, line breaks included |
-| DeepSeek (`chat.deepseek.com`) | `textarea` | Read and write, line breaks included |
-| Perplexity (`perplexity.ai`) | Lexical | Read and write, line breaks included |
-| Other sites (Gemini, Mistral, Kilo, Copilot…) | `textarea` or `contenteditable` | Same mechanism, not checked site by site |
+Web providers from the [OmniRoute list](https://github.com/diegosouzapw/OmniRoute/blob/main/docs/reference/PROVIDER_REFERENCE.md) (and common sites) **validated and tested** on 2026-10-04: a multi-line prompt with accents written, read back identical, then cleared, never sent.
 
-If no input box is found, « Charger » copies the prompt to the clipboard.
+| Provider | Site | Editor | Result |
+|---|---|---|---|
+| Claude | `claude.ai` | ProseMirror | ✅ validated |
+| ChatGPT | `chatgpt.com` | ProseMirror | ✅ validated (7,276-character prompt, no attachment) |
+| DeepSeek | `chat.deepseek.com` | `textarea` | ✅ validated |
+| Perplexity | `perplexity.ai` | Lexical | ✅ validated |
+| Gemini | `gemini.google.com` | Quill | ✅ validated |
+| Grok | `grok.com` | `textarea` | ✅ validated |
+| HuggingChat | `huggingface.co/chat` | `textarea` | ✅ validated |
+| Kimi | `kimi.com` | Lexical | ✅ validated |
+| Mistral Le Chat | `chat.mistral.ai` | ProseMirror | ✅ validated |
+| DuckDuckGo AI Chat | `duck.ai` | `textarea` | ✅ validated |
+| Qwen Chat | `chat.qwen.ai` | `textarea` | ✅ validated |
+| Z.ai | `chat.z.ai` | `textarea` | ✅ validated |
+| Venice | `venice.ai` | `textarea` | ✅ validated |
+| Microsoft Copilot | `copilot.microsoft.com` | — | ⚪ not tested (page not scriptable by the test tool) |
+| Meta AI | `meta.ai` | — | ⚪ not tested (page did not load) |
+| Arena (LMArena) | `lmarena.ai` | — | ⚪ not tested (bot check) |
+| Poe | `poe.com` | — | ⚪ not tested (sign-in required) |
+
+Other web sites (t3.chat, Blackbox, Notion AI, v0, Yuanbao, M365 Copilot…) use the same kinds of editor and should work, not validated yet. OmniRoute providers of the API, CLI or IDE kind (API keys, Codex CLI, Cursor, Kiro…) have no web chat page: they are out of scope for a browser extension.
+
+If no input box is found, or the editor rejects the text, « Charger » copies the prompt to the clipboard.
 
 ## Installation
 
@@ -91,13 +107,13 @@ Same principles as MDE Kusto Saver: no build step, vanilla JavaScript, pure func
 
 - **`activeTab` instead of a list of sites.** The extension can only reach the active tab, and only when its menu is opened: it works on any AI site without asking for access to all sites.
 - **No permanent content script.** The menu injects on demand (`chrome.scripting.executeScript`, `MAIN` world, top frame) the `composer` function, which reads or replaces the input box text.
-- **Writing that rich editors accept.** `textarea`: select then `insertText` (fallback: native setter + `input` event). ProseMirror / Lexical: select with a `Range`, then a synthetic paste (`paste` with `text/plain`), which keeps line breaks; fallback: `insertText`. The text is read back and compared with the prompt to confirm.
+- **Writing without pasting, accepted by rich editors.** `textarea`: select then `insertText` (fallback: native setter + `input` event). Rich editors: select with a `Range`, then `insertText` (ProseMirror, Quill); if line breaks are lost, line-by-line typing through `beforeinput` events (`insertText` + `insertLineBreak`, for Lexical) or `insertParagraph`. Never a synthetic paste: no site turns the prompt into an attachment. The text is read back and compared with the prompt to confirm.
 - **No network call, nothing is sent to the site**: the prompt is only placed in the input box, sending stays manual.
 
 ## Limits
 
 - An input box inside an iframe is not reached (none of the checked sites uses one).
-- Editors that reject both the synthetic paste and `insertText` cannot be filled: the button then copies the prompt to the clipboard.
+- Editors that reject both `insertText` and `beforeinput` events cannot be filled: the button then copies the prompt to the clipboard.
 - French-only interface.
 
 ## License

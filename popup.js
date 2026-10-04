@@ -6,13 +6,13 @@ let editingId = null;
 
 // Run in the page's MAIN world, injected as is: must stay self-contained.
 // Finds the chat input box (focused one, else the lowest visible textarea / contenteditable) and reads or replaces its text.
-// Checked on Claude and ChatGPT (ProseMirror), Perplexity (Lexical), DeepSeek (textarea).
+// Editors checked: textarea, ProseMirror, Lexical, Quill (list of sites in the README).
 async function composer(action, text) {
   const tick = ms => new Promise(r => setTimeout(r, ms));
   const usable = e => { const r = e.getBoundingClientRect(); return r.width > 50 && r.height > 10 && !e.disabled && !e.readOnly; };
   const a = document.activeElement;
   const el = a && usable(a) && (a.tagName === 'TEXTAREA' || a.isContentEditable) ? a
-    : [...document.querySelectorAll('textarea, [contenteditable="true"], [contenteditable=""]')].filter(usable)
+    : [...document.querySelectorAll('textarea, [contenteditable="true"], [contenteditable=""], [contenteditable="plaintext-only"]')].filter(usable)
       .sort((x, y) => y.getBoundingClientRect().bottom - x.getBoundingClientRect().bottom)[0];
   if (!el) return null;
   // Rich editors render one block per line: join the blocks with \n (innerText would double the breaks).
@@ -34,8 +34,8 @@ async function composer(action, text) {
     }
     return same();
   }
-  // The page has no focus while the popup is open, so execCommand('selectAll') is ignored by Lexical: select with a Range,
-  // then a synthetic paste, which ProseMirror and Lexical turn into paragraphs / line breaks.
+  // Never a synthetic paste: ChatGPT and others turn pasted text into a file attachment, which many companies block.
+  // The page has no focus while the popup is open, so execCommand('selectAll') is ignored by Lexical: select with a Range.
   const selectAll = async () => {
     const r = document.createRange();
     r.selectNodeContents(el);
@@ -44,13 +44,20 @@ async function composer(action, text) {
     s.addRange(r);
     await tick(50);
   };
-  await selectAll();
-  const dt = new DataTransfer();
-  dt.setData('text/plain', text);
-  el.dispatchEvent(new ClipboardEvent('paste', { clipboardData: dt, bubbles: true, cancelable: true }));
-  await tick(200);
-  if (!same()) { await selectAll(); document.execCommand('insertText', false, text); await tick(100); }
-  return same();
+  const ev = (inputType, data) => el.dispatchEvent(new InputEvent('beforeinput', { inputType, data, bubbles: true, cancelable: true }));
+  const lines = text.split('\n');
+  for (const attempt of [
+    () => document.execCommand('insertText', false, text), // ProseMirror, Quill
+    () => lines.forEach((l, i) => { if (i) ev('insertLineBreak'); if (l) ev('insertText', l); }), // Lexical drops \n from insertText
+    () => lines.forEach((l, i) => { if (i) ev('insertParagraph'); if (l) ev('insertText', l); }),
+    () => lines.forEach((l, i) => { if (i) document.execCommand('insertParagraph'); if (l) document.execCommand('insertText', false, l); }),
+  ]) {
+    await selectAll();
+    attempt();
+    await tick(200);
+    if (same()) return true;
+  }
+  return false;
 }
 
 async function activeTab() {

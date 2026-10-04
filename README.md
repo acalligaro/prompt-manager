@@ -24,7 +24,7 @@ Si aucune zone de saisie n'est trouvée, « Charger » copie le prompt dans le p
 
 1. Ouvrir `chrome://extensions` (ou `edge://extensions`) et activer le **mode développeur**.
 2. **Charger l'extension non empaquetée** et choisir ce dossier.
-3. Épingler l'icône (bulle bleue) dans la barre d'outils.
+3. Épingler l'icône (bulle bleue à étincelle) dans la barre d'outils.
 
 Après une mise à jour du code : bouton ↻ de l'extension dans `chrome://extensions`.
 
@@ -83,7 +83,7 @@ Même principes que MDE Kusto Saver : pas d'étape de build, JavaScript vanilla,
 | `popup.html` / `popup.js` | Menu (aussi page d'options ouverte en onglet) : formulaire, liste, import / export, fonction `composer` injectée dans la page |
 | `lib.js` | `isWebPage`, `parseTags`, `matches`, `upsert`, `mergeImport` |
 | `test.js` | Tests : `node test.js` (Node 18+) |
-| `icons/` | `icon.svg` (source : bulle de discussion + signet) et rendus PNG 16 / 32 / 48 / 128 |
+| `icons/` | `icon.svg` (source : bulle de discussion, étincelle et signet) et rendus PNG 16 / 32 / 48 / 128 |
 | `docs/img/` | Captures des README |
 | `LICENSE` | Licence d'utilisation |
 

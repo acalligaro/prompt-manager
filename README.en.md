@@ -26,7 +26,7 @@ If no input box is found, « Charger » copies the prompt to the clipboard.
 
 1. Open `chrome://extensions` (or `edge://extensions`) and turn on **Developer mode**.
 2. **Load unpacked** and select this folder.
-3. Pin the icon (blue bubble) to the toolbar.
+3. Pin the icon (blue bubble with a sparkle) to the toolbar.
 
 After a code update: the extension's ↻ button in `chrome://extensions`.
 
@@ -85,7 +85,7 @@ Same principles as MDE Kusto Saver: no build step, vanilla JavaScript, pure func
 | `popup.html` / `popup.js` | Menu (also the options page opened in a tab): form, list, import / export, `composer` function injected into the page |
 | `lib.js` | `isWebPage`, `parseTags`, `matches`, `upsert`, `mergeImport` |
 | `test.js` | Tests: `node test.js` (Node 18+) |
-| `icons/` | `icon.svg` (source: chat bubble + bookmark) and its PNG renders 16 / 32 / 48 / 128 |
+| `icons/` | `icon.svg` (source: chat bubble, sparkle and bookmark) and its PNG renders 16 / 32 / 48 / 128 |
 | `docs/img/` | Screenshots of the READMEs |
 | `LICENSE` | Usage license |
 
